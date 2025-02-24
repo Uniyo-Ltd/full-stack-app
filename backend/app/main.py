@@ -2,9 +2,13 @@ import sentry_sdk
 from fastapi import FastAPI
 from fastapi.routing import APIRoute
 from starlette.middleware.cors import CORSMiddleware
+from fastapi_cache import FastAPICache
+from fastapi_cache.backends.redis import RedisBackend
+from redis import asyncio as aioredis
 
 from app.api.main import api_router
 from app.core.config import settings
+from app.api.v1.endpoints import set_menus
 
 
 def custom_generate_unique_id(route: APIRoute) -> str:
@@ -31,3 +35,13 @@ if settings.all_cors_origins:
     )
 
 app.include_router(api_router, prefix=settings.API_V1_STR)
+app.include_router(
+    set_menus.router,
+    prefix="/api/v1",
+    tags=["set-menus"]
+)
+
+@app.on_event("startup")
+async def startup():
+    redis = aioredis.from_url("redis://redis", encoding="utf8", decode_responses=True)
+    FastAPICache.init(backend=RedisBackend(redis), prefix="fastapi-cache")

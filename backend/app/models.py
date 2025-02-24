@@ -120,15 +120,27 @@ class NewPassword(SQLModel):
     new_password: str = Field(min_length=8, max_length=40)
 
 class SetMenuCuisineLink(SQLModel, table=True):
-    set_menu_id: Optional[int] = Field(default=None, foreign_key="setmenu.id", primary_key=True)
-    cuisine_id: Optional[int] = Field(default=None, foreign_key="cuisine.id", primary_key=True)
-
+    __tablename__ = "set_menu_cuisine_link"
+    
+    set_menu_id: int = Field(
+        foreign_key="set_menu.id",
+        primary_key=True
+    )
+    cuisine_id: int = Field(
+        foreign_key="cuisine.id",
+        primary_key=True
+    )
 
 class Cuisine(SQLModel, table=True):
+    __tablename__ = "cuisine"
+    
     id: int = Field(default=None, primary_key=True)
     name: str
-    set_menus: List["SetMenu"] = Relationship(back_populates="cuisines", link_model=SetMenuCuisineLink)
-
+    slug: str = Field(index=True)
+    set_menus: List["SetMenu"] = Relationship(
+        back_populates="cuisines",
+        link_model=SetMenuCuisineLink
+    )
 
 class MenuGroupGroups(BaseModel):
     ungrouped: int
@@ -159,6 +171,8 @@ class MenuGroups(BaseModel):
 
 
 class SetMenu(SQLModel, table=True):
+    __tablename__ = "set_menu"
+    
     __table_args__ = (
         # Index for price-based queries
         Index('idx_price_per_person', 'price_per_person'),
@@ -172,7 +186,7 @@ class SetMenu(SQLModel, table=True):
         # Index for created_at (for sorting/filtering by date)
         Index('idx_created_at', 'created_at')
     )
-    id: Optional[int] = Field(default=None, primary_key=True)
+    id: int = Field(default=None, primary_key=True)
     created_at: datetime
     description: Optional[str] = None
     display_text: int
@@ -193,7 +207,10 @@ class SetMenu(SQLModel, table=True):
     is_kosher: bool
     available: bool
     number_of_orders: int
-    cuisines: List[Cuisine] = Relationship(back_populates="set_menus", link_model=SetMenuCuisineLink)
+    cuisines: List[Cuisine] = Relationship(
+        back_populates="set_menus",
+        link_model=SetMenuCuisineLink
+    )
 
 
 class SetMenuData(SQLModel):
